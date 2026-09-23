@@ -19,7 +19,6 @@ class Network(minitorch.Module):
         self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        # x: (batch_size, 2)
         h1 = self.layer1(x).relu()
         h2 = self.layer2(h1).relu()
         return self.layer3(h2).sigmoid()
@@ -28,19 +27,14 @@ class Network(minitorch.Module):
 class Linear(minitorch.Module):
     def __init__(self, in_size, out_size):
         super().__init__()
-        # Веса размера (in_size, out_size)
         self.weights = minitorch.Parameter(
             minitorch.rand((in_size, out_size), requires_grad=True) * 2.0 - 1.0
         )
-        # Смещение размера (out_size,)
         self.bias = minitorch.Parameter(
             minitorch.rand((out_size,), requires_grad=True) * 2.0 - 1.0
         )
 
     def forward(self, x):
-        # x: (batch_size, in_size)
-        # w: (in_size, out_size)
-        # Бродкастим: (batch_size, in_size, 1) * (1, in_size, out_size)
         batch_size = x.shape[0]
         in_size = x.shape[1]
         out_size = self.weights.value.shape[1]
@@ -48,7 +42,7 @@ class Linear(minitorch.Module):
         x_expanded = x.view(batch_size, in_size, 1)
         w_expanded = self.weights.value.view(1, in_size, out_size)
 
-        # Перемножаем и суммируем по размерности 1 (in_size) -> получаем (batch_size, 1, out_size)
+
         out = (x_expanded * w_expanded).sum(1).view(batch_size, out_size)
         return out + self.bias.value.view(1, out_size)
 
