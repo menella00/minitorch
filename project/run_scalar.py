@@ -10,17 +10,17 @@ import minitorch
 class Network(minitorch.Module):
     def __init__(self, hidden_layers):
         super().__init__()
-        # ASSIGN1.5
-        # Submodules
+        # Первый слой: вход размерности 2 -> скрытый слой размерности hidden_layers
         self.layer1 = Linear(2, hidden_layers)
-        self.layer2 = Linear(hidden_layers, hidden_layers)
-        self.layer3 = Linear(hidden_layers, 1)
-        # END ASSIGN1.5
+        # Второй слой: скрытый слой hidden_layers -> выходной скаляр 1
+        self.layer2 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        middle = [h.relu() for h in self.layer1.forward(x)]
-        end = [h.relu() for h in self.layer2.forward(middle)]
-        return self.layer3.forward(end)[0].sigmoid()
+        # x: список из двух скаляров [x_1, x_2]
+        # Пропускаем через первый слой и применяем ReLU
+        h = [y.relu() for y in self.layer1.forward(x)]
+        # Пропускаем через второй слой и применяем Sigmoid к единственному выходу
+        return self.layer2.forward(h)[0].sigmoid()
 
 
 class Linear(minitorch.Module):
@@ -44,13 +44,17 @@ class Linear(minitorch.Module):
             )
 
     def forward(self, inputs):
-        # ASSIGN1.5
-        y = [b.value for b in self.bias]
-        for i, x in enumerate(inputs):
-            for j in range(len(y)):
-                y[j] = y[j] + x * self.weights[i][j].value
-        return y
-        # END ASSIGN1.5
+        # inputs: список скаляров длины in_size
+        out = []
+        out_size = len(self.bias)
+        in_size = len(inputs)
+        for j in range(out_size):
+            # y_j = b_j + sum_i(inputs[i] * w_ij)
+            val = self.bias[j].value
+            for i in range(in_size):
+                val = val + inputs[i] * self.weights[i][j].value
+            out.append(val)
+        return out
 
 
 def default_log_fn(epoch, total_loss, correct, losses):

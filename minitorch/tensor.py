@@ -183,12 +183,12 @@ class Tensor:
 
     def all(self, dim: Optional[int] = None) -> Tensor:
         if dim is None:
-            return All.apply(self.view(self.size), self._ensure_tensor(0))
+            return All.apply(self.contiguous().view(self.size), self._ensure_tensor(-1))
         else:
             return All.apply(self, self._ensure_tensor(dim))
 
-    def is_close(self, y: Tensor) -> Tensor:
-        return IsClose.apply(self, y)
+    def is_close(self, y: TensorLike) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(y))
 
     def sigmoid(self) -> Tensor:
         return Sigmoid.apply(self)
@@ -210,7 +210,7 @@ class Tensor:
     def sum(self, dim: Optional[int] = None) -> Tensor:
         "Compute the sum over dimension `dim`"
         if dim is None:
-            return Sum.apply(self.contiguous().view(self.size), self._ensure_tensor(0))
+            return Sum.apply(self.contiguous().view(self.size), self._ensure_tensor(-1))
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
 
@@ -269,15 +269,12 @@ class Tensor:
         This method is called when the output of `backward`
         is a different size than the input of `forward`.
 
-
         Parameters:
             other : backward tensor (must broadcast with self)
 
         Returns:
             Expanded version of `other` with the right derivatives
-
         """
-
         # Case 1: Both the same shape.
         if self.shape == other.shape:
             return other
@@ -296,9 +293,7 @@ class Tensor:
             if orig_shape[dim] == 1 and shape != 1:
                 out = self.backend.add_reduce(out, dim)
         assert out.size == self.size, f"{out.shape} {self.shape}"
-        # START CODE CHANGE (2021)
         return Tensor.make(out._tensor._storage, self.shape, backend=self.backend)
-        # END CODE CHANGE (2021)
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
         def zero(shape: UserShape) -> Tensor:
@@ -332,7 +327,7 @@ class Tensor:
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.grad is None:
             self.grad = Tensor.make(
-                [0] * int(operators.prod(self.shape)), self.shape, backend=self.backend
+                [0.0] * int(operators.prod(self.shape)), self.shape, backend=self.backend
             )
         self.grad += x
 

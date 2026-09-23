@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple, List
 
 
 class Module:
@@ -30,30 +30,48 @@ class Module:
         return list(m.values())
 
     def train(self) -> None:
-        "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """
+        Set the mode of this module and all descendent modules to `train`.
+        """
+        self.training = True
+        for m in self._modules.values():
+            m.train()
 
     def eval(self) -> None:
-        "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """
+        Set the mode of this module and all descendent modules to `eval`.
+        """
+        self.training = False
+        for m in self._modules.values():
+            m.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
         Collect all the parameters of this module and its descendents.
 
-
         Returns:
             The name and `Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+
+        def _get_params(prefix: str, mod: Module) -> List[Tuple[str, Parameter]]:
+            params: List[Tuple[str, Parameter]] = []
+            # Собираем собственные параметры модуля
+            for name, p in mod._parameters.items():
+                p_name = f"{prefix}.{name}" if prefix else name
+                params.append((p_name, p))
+            # Рекурсивно спускаемся во все дочерние модули
+            for name, sub_mod in mod._modules.items():
+                sub_prefix = f"{prefix}.{name}" if prefix else name
+                params.extend(_get_params(sub_prefix, sub_mod))
+            return params
+
+        return _get_params("", self)
 
     def parameters(self) -> Sequence[Parameter]:
-        "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        """
+        Enumerate over all the parameters of this module and its descendents.
+        """
+        return [p for _, p in self.named_parameters()]
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """
