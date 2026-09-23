@@ -93,21 +93,13 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # 1. Получаем переменные графа в топологическом порядке от выхода к входам
     ordered_variables = topological_sort(variable)
-
-    # 2. Словарь для накопления градиентов по unique_id
     derivatives: Dict[int, float] = {variable.unique_id: deriv}
-
-    # 3. Проходим по каждой переменной от выхода к входам
     for var in ordered_variables:
         d_out = derivatives.get(var.unique_id, 0.0)
-
-        # Если переменная листовая (обучаемый вес), сохраняем в неё накопленный градиент
         if var.is_leaf():
             var.accumulate_derivative(d_out)
         else:
-            # Иначе спускаем градиенты дальше родительским узлам
             for parent, d_in in var.chain_rule(d_out):
                 if parent.is_constant():
                     continue
