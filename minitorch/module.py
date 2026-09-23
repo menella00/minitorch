@@ -55,11 +55,9 @@ class Module:
 
         def _get_params(prefix: str, mod: Module) -> List[Tuple[str, Parameter]]:
             params: List[Tuple[str, Parameter]] = []
-            # Собираем собственные параметры модуля
             for name, p in mod._parameters.items():
                 p_name = f"{prefix}.{name}" if prefix else name
                 params.append((p_name, p))
-            # Рекурсивно спускаемся во все дочерние модули
             for name, sub_mod in mod._modules.items():
                 sub_prefix = f"{prefix}.{name}" if prefix else name
                 params.extend(_get_params(sub_prefix, sub_mod))
