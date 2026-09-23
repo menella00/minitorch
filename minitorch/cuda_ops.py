@@ -3,7 +3,6 @@ from typing import Callable, Optional
 import numba
 from numba import cuda
 
-# Совместимость с новыми версиями Numba и cudasim
 if not hasattr(cuda, "is_cuda_array"):
     cuda.is_cuda_array = lambda obj: (
         hasattr(obj, "copy_to_host")
@@ -122,7 +121,6 @@ class CudaOps(TensorOps):
         return out
 
 
-# Implementations
 
 
 def tensor_map(
